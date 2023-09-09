@@ -11,10 +11,16 @@ use Illuminate\Support\Facades\Session;
 class CategoryController extends Controller
 {
 
-    public function index() {
-        $categories = Category::latest()->pagination(10);
+    public function index(Request $request) {
+        $categories = Category::latest();
 
-        return view ('admin.category.list');
+        if(!empty($request->get('keyword'))) {
+            $categories = $categories->where('name','like','%'.$request->get('keyword').'%');
+    }
+            $categories = $categories->paginate(10);
+
+
+        return view ('admin.category.list',compact('categories'));
     }
 
     public function create()
