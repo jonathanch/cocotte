@@ -40,6 +40,8 @@
 									</div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
+                                        <input type="hidden" id="image_id" name="image_id" value="">
+
                                             <label for="image">Image</label>
                                             <div id="image" class="dropzone dz-clickable">
                                                 <div class="dz-message needsclick">
@@ -174,7 +176,7 @@ $("#name").change(function(){
     addRemoveLinks: true,
     acceptedFiles: "image/jpeg,image/png,image/gif",
     headers: {
-        'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
     }, success: function(file, response){
         $("#image_id").val(response.image_id);
         //console.log(response)
@@ -187,3 +189,119 @@ $("#name").change(function(){
 
 @endsection
 
+@extends('admin.layouts.app')
+
+@section('content')
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <div class="container-fluid my-2">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Create Category</h1>
+            </div>
+            <div class="col-sm-6 text-right">
+                <a href="{{ route('categories.index')}}" class="btn btn-primary">Back</a>
+            </div>
+        </div>
+    </div>
+    <!-- /.container-fluid -->
+</section>
+<!-- Main content -->
+<section class="content">
+    <!-- Default box -->
+    <div class="container-fluid">
+        <form action="{{ route('categories.store') }}" method="post" id="categoryForm" name="categoryForm">
+            @csrf <!-- Ajout du jeton CSRF pour la sécurité -->
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name">Name</label>
+                                <input type="text" name="name" id="name" class="form-control" placeholder="Name">
+                                <p class="text-danger"></p> <!-- Utilisez text-danger pour les messages d'erreur -->
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="slug">Slug</label>
+                                <input type="text" readonly name="slug" id="slug" class="form-control" placeholder="Slug">
+                                <p class="text-danger"></p> <!-- Utilisez text-danger pour les messages d'erreur -->
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="image">Image</label>
+                                <div id="image" class="dropzone dz-clickable">
+                                    <div class="dz-message needsclick">
+                                        <br>Drop files here or click to upload.<br><br>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="status">Status</label>
+                                <select name="status" id="status" class="form-control">
+                                    <option value="1">Active</option>
+                                    <option value="0">Block</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pb-5 pt-3">
+                <button type="submit" class="btn btn-primary">Create</button>
+                <a href="{{ route('categories.index')}}" class="btn btn-outline-dark ml-3">Cancel</a>
+            </div>
+        </form>
+    </div>
+    <!-- /.card -->
+</section>
+<!-- /.content -->
+@endsection
+
+@section('customJs')
+<script>
+    $(document).ready(function () { // Utilisez $(document).ready() pour vous assurer que le DOM est prêt
+        $("#categoryForm").submit(function (event) {
+            event.preventDefault();
+            var element = $(this);
+            $("button[type=submit]").prop('disabled', true);
+            $.ajax({
+                url: element.attr('action'), // Utilisez l'URL de l'action du formulaire
+                type: 'post',
+                data: element.serialize(), // Vous pouvez sérialiser directement le formulaire
+                dataType: 'json',
+                success: function (response) {
+                    $("button[type=submit]").prop('disabled', false);
+
+                    if (response.status) { // Vérifiez la propriété status dans la réponse
+                        window.location.href = "{{ route('categories.index')}}";
+                    } else {
+                        handleFormErrors(response.errors); // Ajout d'une fonction pour gérer les erreurs
+                    }
+                },
+                error: function (jqXHR, exception) {
+                    console.log("Quelque chose s'est mal passé");
+                }
+            });
+        });
+
+        // ... Le reste de votre code JavaScript
+
+        // Fonction pour gérer les erreurs de formulaire
+        function handleFormErrors(errors) {
+            for (var field in errors) {
+                var inputField = $("#" + field);
+                var errorMessage = errors[field];
+
+                inputField.addClass('is-invalid');
+                inputField.siblings('p').addClass('invalid-feedback').text(errorMessage);
+            }
+        }
+    });
+</script>
+@endsection
